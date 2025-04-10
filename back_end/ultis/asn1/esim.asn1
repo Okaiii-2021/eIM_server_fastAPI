@@ -1,0 +1,23 @@
+ProfileDownloadTriggerRequest DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+TransactionId ::= OCTET STRING (SIZE(16))
+
+ProfileDownloadTriggerRequest ::= [84] SEQUENCE {  -- Tag 'BF54'
+    profileDownloadData [0] ProfileDownloadData OPTIONAL,
+    eimTransactionId [2] TransactionId OPTIONAL
+}
+
+ProfileDownloadData ::= CHOICE {
+    activationCode [0] UTF8String (SIZE(0..255)),
+    contactDefaultSmdp [1] NULL,
+    contactSmds [2] SEQUENCE {
+        smdsAddress UTF8String OPTIONAL
+    }
+}
+
+END
+
+
+
+
+

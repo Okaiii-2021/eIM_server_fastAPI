@@ -1,0 +1,123 @@
+<div class="container mt-4">
+    <button class="btn btn-outline-secondary mb-3" id="back-to-dashboard">← Back to Dashboard</button>
+
+    <!-- Profile Details -->
+    <div class="card p-4 shadow-sm">
+        <h4 class="text-primary" id="profile-eid">EID: Loading...</h4>
+
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="p-3 border rounded bg-light" id="profile-description">
+                    <strong>Description:</strong> Loading...
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 border rounded bg-light" id="profile-num-profiles">
+                    <strong>Num of Installed Profile:</strong> Loading...
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="p-3 border rounded bg-light" id="profile-active-profile">
+                    <strong>Activated Profile:</strong> Loading...
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 border rounded bg-light">
+                    <strong>Activation Code Used:</strong> xxxx
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-4 d-flex gap-3">
+            <button class="btn btn-primary">Update EID</button>
+            <button class="btn btn-info text-white trigger-download" id="trigger-download-btn" data-eid="">Trigger Download Profile</button>
+        </div>
+    </div>
+
+    <!-- Activation Code Table -->
+    <div class="table-responsive mt-4">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Activation Code</th>
+                    <th>ICCID</th>
+                    <th>State</th>
+                    <th>Action</th> <!-- No Description column -->
+                </tr>
+            </thead>
+            <tbody id="activation-code-table">
+                <!-- Rows will be dynamically populated -->
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+<div class="modal fade" id="createPsmoModal" tabindex="-1" aria-labelledby="createPsmoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createPsmoModalLabel">Create PSMO</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createPsmoForm">
+                    <div class="mb-3">
+                        <label class="form-label">EID:</label>
+                        <input type="text" class="form-control" id="psmo-eid" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ICCID:</label>
+                        <input type="text" class="form-control" id="psmo-iccid" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">PSMO *:</label>
+                        <select class="form-select" id="psmo-option">
+                            <option value="">-- Select PSMO --</option>
+                            <option value="Enable">Enable</option>
+                            <option value="Disable">Disable</option>
+                            <option value="Delete">Delete</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-create" id="createPsmoBtn" disabled>Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trigger Download Profile Modal -->
+<div class="modal fade" id="triggerDownloadModal" tabindex="-1" aria-labelledby="triggerDownloadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="triggerDownloadModalLabel">Enter Activation Code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="triggerDownloadForm">
+                    <div class="mb-3">
+                        <label class="form-label">Activation Code:</label>
+                        <input type="text" class="form-control" id="activationCodeInput" required>
+                    </div>
+                    <input type="hidden" id="trigger-eid">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitActivationCode">Add Activation Code</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

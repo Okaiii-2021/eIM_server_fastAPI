@@ -1,0 +1,38 @@
+<div class="container mt-4">
+    <h2 class="text-dark">eIM Configuration</h2>
+
+    <!-- Public Key ID -->
+    <div class="mb-3">
+        <label for="publicKeyId" class="form-label">euicc Ci Public Key Id*:</label>
+        <input type="text" class="form-control" id="publicKeyId" placeholder="Enter Public Key ID">
+    </div>
+
+    <!-- eIM Public Key Data -->
+    <div class="mb-3">
+        <label class="form-label">eIM Public Key Data:</label>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="publicKeyType" id="certificate" checked>
+            <label class="form-check-label" for="certificate">Certificate</label>
+        </div>
+        <div class="drop-zone" id="dropZone1">
+            Drag certificate
+            <input type="file" id="fileInput1" hidden>
+        </div>
+    </div>
+
+    <!-- Trusted Public Key Data -->
+    <div class="mb-3">
+        <label class="form-label">Trusted Public Key Data Tls:</label>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="trustedKeyType" id="trustedCertificate" checked>
+            <label class="form-check-label" for="trustedCertificate">Certificate</label>
+        </div>
+        <div class="drop-zone" id="dropZone2">
+            Drag certificate
+            <input type="file" id="fileInput2" hidden>
+        </div>
+    </div>
+
+    <!-- Update Button -->
+    <button class="btn btn-primary mt-3">Update</button>
+</div>

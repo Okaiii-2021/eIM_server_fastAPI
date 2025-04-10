@@ -1,0 +1,198 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Lighter gray background */
+    margin: 0;
+    padding: 0;
+}
+
+
+/* Sidebar Styling */
+.sidebar {
+    height: 100vh;
+    background: #0d1b2a; /* Muted Dark Blue */
+    padding-top: 20px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 220px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+    text-align: center;
+    padding: 15px;
+    font-weight: bold;
+    color: white;
+}
+
+.sidebar .nav-link {
+    font-size: 16px;
+    padding: 12px;
+    color: white;
+    display: flex;
+    align-items: center;
+    transition: background 0.3s ease;
+}
+
+.sidebar .nav-link i {
+    margin-right: 10px;
+}
+
+.sidebar .nav-link.active {
+    font-weight: bold;
+    background-color: #1b2c48;
+    border-left: 4px solid #5a99d4;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #1b2c48;
+}
+
+/* Main Content Area */
+.content-area {
+    background-color: white;
+    padding: 20px;
+    min-height: 100vh;
+    margin-left: 220px;
+    width: calc(100% - 220px); /* Ensure it fills the rest of the space */
+}
+
+
+/* Summary Cards */
+.summary-card {
+    border-radius: 10px;
+    padding: 2px;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.muted-blue-card {
+    background-color: #5a99d4; /* Soft Blue */
+}
+
+.muted-green-card {
+    background-color: #5c946e; /* Soft Green */
+}
+
+.muted-orange-card {
+    background-color: #c67f5a; /* Soft Orange */
+}
+
+/* Table Styling */
+.table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+/* Buttons */
+.btn-secondary {
+    border-radius: 5px;
+    background-color: #1f1d9f;
+    border: none;
+}
+
+.btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Container Styling */
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Drop Zone Styling */
+.drop-zone {
+    border: 2px dashed #6c757d;
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.drop-zone:hover {
+    background-color: #e9ecef;
+}
+
+/* Input Field */
+.form-control {
+    border-radius: 5px;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #1f1d9f;
+    border: none;
+}
+
+/* Apply left alignment to all tables */
+.table th, .table td {
+    text-align: left !important;
+    vertical-align: middle;
+}
+
+/* Tooltip container */
+.state-badge {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* Tooltip text - Dynamic Width & Multi-line Support */
+.state-badge .tooltip-text {
+    visibility: hidden;
+    width: max-content; /* Allows dynamic width based on content */
+    max-width: 300px; /* Prevents tooltip from being too wide */
+    background-color: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 10;
+    bottom: 130%; /* Position above the badge */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, transform 0.2s ease-in-out;
+    font-size: 13px;
+    white-space: normal; /* Allow multi-line text */
+    word-wrap: break-word;
+    line-height: 1.5;
+}
+
+/* Tooltip arrow */
+.state-badge .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* Arrow points down */
+    left: 50%;
+    margin-left: -7px;
+    border-width: 7px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent;
+}
+
+/* Show tooltip on hover */
+.state-badge:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+
+
