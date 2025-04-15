@@ -10,14 +10,14 @@ logging.basicConfig(level=logging.DEBUG)
 server_instance = eIM_server()
 
 # Create SSL context
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain(certfile=server_instance.SSL_KEY_FILE, keyfile=server_instance.SSL_KEY_FILE)
+# ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+# ssl_context.load_cert_chain(certfile=server_instance.SSL_CERT_FILE, keyfile=server_instance.SSL_KEY_FILE)
 
 # Set ciphers explicitly
-ssl_context.set_ciphers("ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256")
+# ssl_context.set_ciphers("ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256")
 
 # Ensure only TLS 1.2+ is allowed
-ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+# ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
 
 if __name__ == "__main__":
     logging.info("🔹 Starting Uvicorn with SSL debug mode...")
@@ -25,6 +25,9 @@ if __name__ == "__main__":
         server_instance.app,
         host="0.0.0.0",
         port=8443,
-        ssl_context=ssl_context,  # ✅ Correct way to pass SSL context
+        ssl_certfile=server_instance.SSL_CERT_FILE,
+        ssl_keyfile=server_instance.SSL_KEY_FILE,
+        ssl_version=ssl.PROTOCOL_TLS_SERVER,  # Set SSL version
+        ssl_ciphers="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256",  # Explicit ciphers
         log_level="debug"
     )

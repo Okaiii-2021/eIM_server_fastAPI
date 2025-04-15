@@ -10,6 +10,9 @@ from models import *
 from bson import ObjectId
 import base64
 
+# Store active HTTPS sessions
+sm_dp_sessions = {}
+
 async def check_pending_packet(eid_data: GetEimPackageRequest):
     """
     Check if an activation code is available for the given eid_name.
@@ -47,10 +50,6 @@ async def check_pending_packet(eid_data: GetEimPackageRequest):
     # If no activation codes are found
     return {"eimPackageError": 127}  # Undefined Error
 
-
-# Store active HTTPS sessions
-sm_dp_sessions = {}
-
 async def handle_initiate_authentication(eid_data: InitiateAuthenticationRequest):
     """
     Forward information to the SM-DP+ server specified in "smdpAddress".
@@ -84,23 +83,23 @@ async def handle_initiate_authentication(eid_data: InitiateAuthenticationRequest
     }
 
     try:
-        logging.info(f"🔄 Forwarding authentication request to SM-DP+: {smdp_url}")
+        logging.info(f"Forwarding authentication request to SM-DP+: {smdp_url}")
 
         async with session.post(smdp_url, headers=headers, json=payload, ssl=False, timeout=10) as response:
-            logging.info(f"📩 Response from SM-DP+: {response.status}")
+            logging.info(f"Response from SM-DP+: {response.status}")
 
             # Log response content for debugging
             response_text = await response.text()
-            logging.info(f"🔍 Response body: {response_text}")
+            logging.info(f"Response body: {response_text}")
 
-            # ✅ Return the response back to the client
+            # Return the response back to the client
             return {
                 "status_code": response.status,
                 "response_body": response_text
             }
 
     except aiohttp.ClientError as e:
-        logging.error(f"🚨 Failed to connect to {smdp_url}: {e}")
+        logging.error(f"Failed to connect to {smdp_url}: {e}")
 
 
 async def handle_AuthenticateServerResponseRequest(eid_data: AuthenticateServerResponseRequest):
@@ -135,11 +134,11 @@ async def handle_AuthenticateServerResponseRequest(eid_data: AuthenticateServerR
     }
 
     try:
-        logging.info(f"🔄 Forwarding authentication response to SM-DP+: {smdp_url}")
+        logging.info(f"Forwarding authentication response to SM-DP+: {smdp_url}")
 
         async with session.post(smdp_url, headers=headers, json=payload, ssl=False, timeout=10) as response:
             response_text = await response.text()
-            logging.info(f"📩 Response from SM-DP+: {response.status} - {response_text}")
+            logging.info(f"Response from SM-DP+: {response.status} - {response_text}")
 
             # ✅ Return the response back to the client
             return {
@@ -148,9 +147,8 @@ async def handle_AuthenticateServerResponseRequest(eid_data: AuthenticateServerR
             }
 
     except aiohttp.ClientError as e:
-        logging.error(f"🚨 Failed to connect to {smdp_url}: {e}")
+        logging.error(f"Failed to connect to {smdp_url}: {e}")
         raise HTTPException(status_code=500, detail=f"Connection to SM-DP+ failed: {str(e)}")
-    
 
 async def handle_getBoundProfilePackage(eid_data: GetBoundProfilePackage):
     """
@@ -184,11 +182,11 @@ async def handle_getBoundProfilePackage(eid_data: GetBoundProfilePackage):
     }
 
     try:
-        logging.info(f"🔄 Forwarding GetBoundProfilePackage response to SM-DP+: {smdp_url}")
+        logging.info(f"Forwarding GetBoundProfilePackage response to SM-DP+: {smdp_url}")
 
         async with session.post(smdp_url, headers=headers, json=payload, ssl=False, timeout=10) as response:
             response_text = await response.text()
-            logging.info(f"📩 Response from SM-DP+: {response.status} - {response_text}")
+            logging.info(f"Response from SM-DP+: {response.status} - {response_text}")
 
             # ✅ Return the response back to the client
             return {
@@ -197,5 +195,6 @@ async def handle_getBoundProfilePackage(eid_data: GetBoundProfilePackage):
             }
 
     except aiohttp.ClientError as e:
-        logging.error(f"🚨 Failed to connect to {smdp_url}: {e}")
+        logging.error(f"Failed to connect to {smdp_url}: {e}")
         raise HTTPException(status_code=500, detail=f"Connection to SM-DP+ failed: {str(e)}")
+

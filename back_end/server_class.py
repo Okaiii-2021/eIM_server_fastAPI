@@ -5,9 +5,13 @@ import asyncio
 import logging
 import socket
 import ssl
+from pathlib import Path
 
 from routes.eid_routes import eid_router
 from routes.gsma_routes import gsma_router
+
+base_dir = Path(__file__).resolve().parent
+print(base_dir)
 
 class eIM_server:
     def __init__(self):
@@ -24,8 +28,8 @@ class eIM_server:
         self.sm_dp_sessions = {}
 
         # Load SSL certificate and key for HTTPS connections
-        self.SSL_CERT_FILE = "/home/okai/work_space/TMA_project/eim_server/back_end/certs/server.crt"
-        self.SSL_KEY_FILE = "/home/okai/work_space/TMA_project/eim_server/back_end/certs/server.key"
+        self.SSL_CERT_FILE = base_dir / "certs" / "server.crt"
+        self.SSL_KEY_FILE = base_dir / "certs" / "server.key"
 
         # # Register API routes
         self.app.include_router(eid_router, prefix="/api")

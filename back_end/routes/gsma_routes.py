@@ -8,13 +8,11 @@ from database import eid_collection  # ✅ Ensure the database is imported
 
 gsma_router = APIRouter()
 
-# server_instance.app.include_router(gsma_router)
+############################################
+############# For esipa ####################
+############################################
 
-###################################################
-############# For esipa
-###################################################
-
-@gsma_router.get("/gsma/rsp2/esipa/getEimPackage")
+@gsma_router.post("/gsma/rsp2/esipa/getEimPackage")
 async def getEimPackage(eid_data: GetEimPackageRequest):
     print("Received Data:", eid_data)
     return await check_pending_packet(eid_data)
@@ -29,11 +27,10 @@ async def handle_authenticate_server(eid_data: AuthenticateServerResponseRequest
     print("Received Data:", eid_data)
     return await handle_AuthenticateServerResponseRequest(eid_data)
 
-
-@gsma_router.post("/gsma/rsp2/es9plus/getBoundProfilePackage")
+@gsma_router.post("/gsma/rsp2/esipa/getBoundProfilePackage")
 async def handle_get_bound_profilepackage(eid_data: GetBoundProfilePackage):
     """
     API Route: Prepare Download request forwarding to SM-DP+.
     """
-    logging.info("✅ Received PrepareDownload request")
+    logging.info("Received PrepareDownload request")
     return await handle_getBoundProfilePackage(eid_data)
