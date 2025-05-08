@@ -2,8 +2,7 @@
 from fastapi import APIRouter, Depends
 from models import *
 from services.gsma_service import *
-from database import eid_collection  # ✅ Ensure the database is imported
-# from main import server_instance
+from database import eid_collection
 
 
 gsma_router = APIRouter()
@@ -22,15 +21,23 @@ async def handle_init_authen(eid_data: InitiateAuthenticationRequest):
     print("Received Data:", eid_data)
     return await handle_initiate_authentication(eid_data)
 
-@gsma_router.post("/gsma/rsp2/esipa/AuthenticateServerResponseRequest")
-async def handle_authenticate_server(eid_data: AuthenticateServerResponseRequest):
-    print("Received Data:", eid_data)
-    return await handle_AuthenticateServerResponseRequest(eid_data)
+@gsma_router.post("/gsma/rsp2/esipa/authenticateClient")
+async def handle_authenticate_server(eid_data: AuthenticateClient):
+    print("Received Data: ", eid_data)
+    return await handle_AuthenticateClient(eid_data)
 
 @gsma_router.post("/gsma/rsp2/esipa/getBoundProfilePackage")
 async def handle_get_bound_profilepackage(eid_data: GetBoundProfilePackage):
     """
     API Route: Prepare Download request forwarding to SM-DP+.
     """
-    logging.info("Received PrepareDownload request")
+    logging.info("Received GetBoundProfilePackage: ",eid_data)
     return await handle_getBoundProfilePackage(eid_data)
+
+@gsma_router.post("/gsma/rsp2/esipa/handleNotification")
+async def handle_handle_notification(eid_data: HandleNotification):
+    """
+    API Route: Prepare Download request forwarding to SM-DP+.
+    """
+    logging.info("Received PrepareDownload request")
+    return await handle_handleNotification(eid_data)

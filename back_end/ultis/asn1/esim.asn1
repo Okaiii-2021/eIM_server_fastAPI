@@ -1,6 +1,24 @@
-ProfileDownloadTriggerRequest DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+MyModule  DEFINITIONS AUTOMATIC TAGS ::= BEGIN
 
+IMPORTS
+    Certificate FROM PKIX1Explicit88
+    SubjectKeyIdentifier FROM PKIX1Implicit88;
+
+
+
+Octet8 ::= OCTET STRING (SIZE(8))
+Octet4 ::= OCTET STRING (SIZE(4))
+Octet16 ::= OCTET STRING (SIZE(16))
+OctetTo16 ::= OCTET STRING (SIZE(1..16))
+Octet32 ::= OCTET STRING (SIZE(32))
+Octet1 ::= OCTET STRING(SIZE(1))
+Octet2 ::= OCTET STRING (SIZE(2))
+VersionType ::= OCTET STRING(SIZE(3))
 TransactionId ::= OCTET STRING (SIZE(16))
+EuiccSignPIR ::= [APPLICATION 55] OCTET STRING -- Tag '5F37', eUICC?s signature
+
+Iccid ::= [APPLICATION 26] OCTET STRING (SIZE(10)) -- ICCID as coded in EFiccid, corresponding tag is '5A'
+
 
 ProfileDownloadTriggerRequest ::= [84] SEQUENCE {  -- Tag 'BF54'
     profileDownloadData [0] ProfileDownloadData OPTIONAL,
@@ -15,9 +33,593 @@ ProfileDownloadData ::= CHOICE {
     }
 }
 
+ProvideEimPackageResult ::= [80] SEQUENCE { -- Tag 'BF50'
+    eidValue [APPLICATION 26] Octet16 OPTIONAL, -- Tag '5A'
+    eimPackageResult EimPackageResult
+}
+
+EimPackageResult ::= CHOICE {
+    euiccPackageResult [81] EuiccPackageResult,  -- Tag 'BF51'
+    ePRAndNotifications SEQUENCE {
+        euiccPackageResult [81] EuiccPackageResult,  -- Tag 'BF51'
+        notificationList [0] PendingNotificationList  -- Tag 'A0'
+    },
+    ipaEuiccDataResponse [82] IpaEuiccDataResponse,  -- Tag 'BF52'
+    profileDownloadTriggerResult [84] ProfileDownloadTriggerResult,  -- Tag 'BF54'
+    eimPackageResultResponseError [0] EimPackageResultResponseError
+}
+
+EuiccPackageResult ::= [81] CHOICE { -- Tag 'BF51' #SupportedForPsmoV1.0.0#
+	euiccPackageResultSigned EuiccPackageResultSigned,
+	euiccPackageErrorSigned EuiccPackageErrorSigned,
+	euiccPackageErrorUnsigned EuiccPackageErrorUnsigned
+}
+
+EuiccPackageResultSigned ::= SEQUENCE {
+    euiccPackageResultDataSigned EuiccPackageResultDataSigned,
+    euiccSignEPR [APPLICATION 55] OCTET STRING  -- Tag '5F37'
+}
+
+EuiccResultData ::= CHOICE {
+    enableResult [3] EnableProfileResult,
+    disableResult [4] DisableProfileResult,
+    deleteResult [5] DeleteProfileResult,
+    listProfileInfoResult [45] ProfileInfoListResponse,
+    getRATResult [6] RulesAuthorisationTable,  -- See SGP.22
+    configureImmediateEnableResult [7] ConfigureImmediateEnableResult,
+    addEimResult [8] AddEimResult,
+    deleteEimResult [9] DeleteEimResult,
+    updateEimResult [10] UpdateEimResult,
+    listEimResult [11] ListEimResult,
+    rollbackResult [12] RollbackProfileResult,
+    setFallbackAttributeResult [13] SetFallbackAttributeResult,
+    unsetFallbackAttributeResult [14] UnsetFallbackAttributeResult,
+    processingTerminated INTEGER {
+        resultSizeOverflow(1),
+        unknownOrDamagedCommand(2),
+        interruption(3),
+        undefinedError(127)
+    },
+    setDefaultDpAddressResult [101] SetDefaultDpAddressResponse
+}
+
+RulesAuthorisationTable ::= SEQUENCE OF ProfilePolicyAuthorisationRule
+
+ProfilePolicyAuthorisationRule ::= SEQUENCE {
+    pprIds PprIds,
+    allowedOperators SEQUENCE OF OperatorId,
+    pprFlags BIT STRING {
+        consentRequired(0)
+    }
+}
+
+SetDefaultDpAddressResponse ::= [101] SEQUENCE {  -- Tag 'BF65'
+    setDefaultDpAddressResult INTEGER {
+        ok(0),
+        undefinedError(127)
+    }
+}
+
+EuiccPackageErrorSigned ::= SEQUENCE {
+    euiccPackageErrorDataSigned EuiccPackageErrorDataSigned,
+    euiccSignEPE [APPLICATION 55] OCTET STRING  -- Tag '5F37'
+}
+
+EuiccPackageErrorDataSigned ::= SEQUENCE {
+    eimId [0] UTF8String (SIZE(1..128)),
+    counterValue [1] INTEGER,
+    eimTransactionId [2] TransactionId OPTIONAL,
+    euiccPackageErrorCode EuiccPackageErrorCode
+}
+
+EuiccPackageErrorCode ::= INTEGER {
+    invalidEid(3),
+    replayError(4),
+    counterValueOutOfRange(6),
+    sizeOverflow(15),
+    ecallActive(104),
+    undefinedError(127)
+}
+
+EuiccPackageErrorUnsigned ::= SEQUENCE {
+    eimId [0] UTF8String (SIZE(1..128)),
+    eimTransactionId [2] TransactionId OPTIONAL,
+    associationToken [4] INTEGER OPTIONAL
+}
+
+ConfigureImmediateEnableResult ::= INTEGER {
+    ok(0),
+    insufficientMemory(1),
+    commandError(7),
+    undefinedError(127)
+}
+EnableProfileResult ::= INTEGER {
+    ok(0),
+    iccidOrAidNotFound(1),
+    profileNotInDisabledState(2),
+    disallowedByPolicy(3),
+    catBusy(5),
+    rollbackNotAvailable(20),
+    undefinedError(127)
+}
+
+DisableProfileResult ::= INTEGER {
+    ok(0),
+    iccidOrAidNotFound(1),
+    profileNotInEnabledState(2),
+    disallowedByPolicy(3),
+    catBusy(5),
+    undefinedError(127)
+}
+
+DeleteProfileResult ::= INTEGER {
+    ok(0),
+    iccidOrAidNotFound(1),
+    profileNotInDisabledState(2),
+    disallowedByPolicy(3),
+    rollbackNotAvailable(20),
+    returnFallbackProfile(21),
+    undefinedError(127)
+}
+
+ProfileInfoListResponse ::= [45] CHOICE {
+    profileInfoListOk SEQUENCE OF ProfileInfo,  -- See SGP.22
+    profileInfoListError ProfileInfoListError
+}
+
+
+ProfileInfoListError ::= INTEGER {
+    incorrectInputValues(1),
+    profileChangeOngoing(11),
+    undefinedError(127)
+}
+
+RollbackProfileResult ::= INTEGER {
+    ok(0),
+    undefinedError(127)
+}
+
+SetFallbackAttributeResult ::= INTEGER {
+    ok(0),
+    iccidOrAidNotFound(1),
+    fallbackNotAllowed(2),
+    fallbackProfileEnabled(3),
+    undefinedError(127)
+}
+
+UnsetFallbackAttributeResult ::= INTEGER {
+    ok(0),
+    noFallbackAttribute(2),
+    fallbackProfileEnabled(3),
+    commandError(7),
+    undefinedError(127)
+}
+
+AddEimResult ::= CHOICE {
+    associationToken [4] INTEGER,
+    addEimResultCode INTEGER {
+        ok(0),
+        insufficientMemory(1),
+        associatedEimAlreadyExists(2),
+        ciPKUnknown(3),
+        invalidAssociationToken(5),
+        counterValueOutOfRange(6),
+        commandError(7),
+        undefinedError(127)
+    }
+}
+DeleteEimResult ::= INTEGER {
+    ok(0),
+    eimNotFound(1),
+    lastEimDeleted(2),  -- No eIM Configuration Data available in eUICC
+    commandError(7),
+    undefinedError(127)
+}
+
+UpdateEimResult ::= INTEGER {
+    ok(0),
+    eimNotFound(1),
+    ciPKUnknown(3),
+    counterValueOutOfRange(6),
+    commandError(7),
+    undefinedError(127)
+}
+
+ListEimResult ::= CHOICE {
+    eimIdList SEQUENCE OF EimIdInfo,
+    listEimError INTEGER {
+        undefinedError(127)
+    }
+}
+
+EimIdInfo ::= SEQUENCE {
+    eimId [0] UTF8String (SIZE(1..128)),
+    eimIdType [2] EimIdType OPTIONAL  -- Present in case of eimIdTypeOid and eimIdTypeFqdn
+}
+
+EimIdType ::= INTEGER {
+    eimIdTypeOid(1),
+    eimIdTypeFqdn(2),
+    eimIdTypeProprietary(3)
+}
+
+-- ASN1STOP
+
+-- SGP32 Section 2.11.2.2
+-- ASN1START
+IpaEuiccDataErrorCode ::= INTEGER {
+	incorrectTagList (1),
+	euiccCiPKIdNotFound(5),
+	ecallActive(104),
+	undefinedError(127)
+}
+
+IpaEuiccDataResponseError ::= SEQUENCE {
+	eimTransactionId [0] TransactionId OPTIONAL,
+	ipaEuiccDataErrorCode IpaEuiccDataErrorCode
+}
+
+IpaEuiccDataResponse ::= [82] CHOICE { -- Tag 'BF52'
+	ipaEuiccData IpaEuiccData,
+	ipaEuiccDataResponseError IpaEuiccDataResponseError
+}
+
+PendingNotificationList ::= SEQUENCE OF PendingNotification
+
+PendingNotification ::= CHOICE {
+    profileInstallationResult [55] ProfileInstallationResult,  -- Tag 'BF37'
+    otherSignedNotification OtherSignedNotification
+}
+
+OtherSignedNotification ::= SEQUENCE {
+    tbsOtherNotification NotificationMetadata,
+    euiccNotificationSignature [APPLICATION 55] OCTET STRING,  -- eUICC signature of tbsOtherNotification, Tag '5F37'
+    euiccCertificate Certificate,  -- eUICC Certificate (CERT.EUICC.ECDSA) signed by the EUM
+    eumCertificate Certificate  -- EUM Certificate (CERT.EUM.ECDSA) signed by the requested CI
+}
+
+
+IpaEuiccData ::= SEQUENCE {  
+    notificationsList  [0] PendingNotificationList OPTIONAL,  -- Tag 'A0'
+    defaultSmdpAddress [1] UTF8String OPTIONAL,  -- Tag '81'
+    euiccPackageResultList [2] EuiccPackageResultList OPTIONAL,  -- Tag 'A2'
+    euiccInfo1 [32] EUICCInfo1 OPTIONAL,  -- Tag 'BF20'
+    euiccInfo2 [34] EUICCInfo2 OPTIONAL,  -- Tag 'BF22'
+    rootSmdsAddress [3] UTF8String OPTIONAL,  -- Tag '83'
+    associationToken [4] INTEGER OPTIONAL,  -- Tag '84'
+    eumCertificate [5] Certificate OPTIONAL,  -- Tag 'A5'
+    euiccCertificate [6] Certificate OPTIONAL,  -- Tag 'A6'
+    eimTransactionId [7] TransactionId OPTIONAL,  -- Tag '87'
+    ipaCapabilities [8] IpaCapabilities OPTIONAL,  -- Tag 'A8'
+    deviceInfo [9] DeviceInfo OPTIONAL  -- Tag 'A9'
+}
+
+EUICCInfo1 ::= [32] SEQUENCE { -- Tag 'BF20'
+    svn                             [2] VersionType,                  -- GSMA SGP.22 version supported (SVN)
+    euiccCiPKIdListForVerification  [9] SEQUENCE OF SubjectKeyIdentifier,  -- List of CI Public Key Identifiers supported on the eUICC for signature verification
+    euiccCiPKIdListForSigning       [10] SEQUENCE OF SubjectKeyIdentifier  -- List of CI Public Key Identifiers supported on the eUICC for signature creation
+}
+
+
+EuiccPackageResultList ::= SEQUENCE OF EuiccPackageResult
+
+EuiccPackageResultDataSigned ::= SEQUENCE {  -- #SupportedForPsmoV1.0.0#
+    eimId [0] UTF8String (SIZE(1..128)),
+    counterValue [1] INTEGER,
+    eimTransactionId [2] TransactionId OPTIONAL,
+    seqNumber [3] INTEGER,
+    euiccResult SEQUENCE OF EuiccResultData
+}
+
+ProfileDownloadTriggerResult ::= [84] SEQUENCE {  -- Tag 'BF54'
+    eimTransactionId [2] TransactionId OPTIONAL,
+    profileDownloadTriggerResultData CHOICE {
+        profileInstallationResult [55] ProfileInstallationResult,  -- See SGP.22 [4]
+        profileDownloadError SEQUENCE {
+            profileDownloadErrorReason [0] INTEGER {
+                ecallActive(104),
+                undefinedError(127)
+            },
+            errorResponse OCTET STRING OPTIONAL
+        }
+    }
+}
+
+ProfileInstallationResult ::= [55] SEQUENCE {  -- Tag 'BF37'
+    profileInstallationResultData [39] ProfileInstallationResultData,
+    euiccSignPIR EuiccSignPIR
+}
+
+ProfileInstallationResultData ::= [39] SEQUENCE {  -- Tag 'BF27'
+    transactionId [0] TransactionId,  -- The TransactionID generated by the SM-DP+
+    notificationMetadata [47] NotificationMetadata,
+    smdpOid OBJECT IDENTIFIER,  -- SM-DP+ OID (same value as in CERT.DPpb.ECDSA)
+    finalResult [2] CHOICE {
+        successResult SuccessResult,
+        errorResult ErrorResult
+    }
+}
+
+NotificationMetadata ::= [47] SEQUENCE {  -- Tag 'BF2F'
+    seqNumber [0] INTEGER,
+    profileManagementOperation [1] NotificationEvent,  -- Only one bit SHALL be set to 1
+    notificationAddress UTF8String,  -- FQDN to forward the notification
+    iccid Iccid OPTIONAL
+}
+
+NotificationEvent ::= BIT STRING {
+    notificationInstall(0),
+    notificationEnable(1),
+    notificationDisable(2),
+    notificationDelete(3)
+}
+
+SuccessResult ::= SEQUENCE {
+    aid [APPLICATION 15] OCTET STRING (SIZE(5..16)),  -- AID of ISD-P
+    simaResponse OCTET STRING  -- Contains (multiple) 'EUICCResponse' as defined in [5]
+}
+
+ErrorResult ::= SEQUENCE {
+    bppCommandId BppCommandId,
+    errorReason ErrorReason,
+    simaResponse OCTET STRING OPTIONAL  -- Contains (multiple) 'EUICCResponse' as defined in [5]
+}
+
+BppCommandId ::= INTEGER {
+    initialiseSecureChannel(0),
+    configureISDP(1),
+    storeMetadata(2),
+    storeMetadata2(3),
+    replaceSessionKeys(4),
+    loadProfileElements(5)
+}
+
+ErrorReason ::= INTEGER {
+    incorrectInputValues(1),
+    invalidSignature(2),
+    invalidTransactionId(3),
+    unsupportedCrtValues(4),
+    unsupportedRemoteOperationType(5),
+    unsupportedProfileClass(6),
+    scp03tStructureError(7),
+    scp03tSecurityError(8),
+    installFailedDueToIccidAlreadyExistsOnEuicc(9),
+    installFailedDueToInsufficientMemoryForProfile(10),
+    installFailedDueToInterruption(11),
+    installFailedDueToPEProcessingError(12),
+    installFailedDueToDataMismatch(13),
+    testProfileInstallFailedDueToInvalidNaaKey(14),
+    pprNotAllowed(15),
+    installFailedDueToUnknownError(127)
+}
+
+EimPackageResultResponseError ::= SEQUENCE {
+	eimTransactionId [0] TransactionId OPTIONAL,
+	eimPackageResultErrorCode EimPackageResultErrorCode
+}
+
+EimPackageResultErrorCode ::= INTEGER {
+    invalidPackageFormat(1),
+    unknownPackage(2),
+    undefinedError(127)
+}
+
+
+ProfileInfo ::= [PRIVATE 3] SEQUENCE {  -- Tag 'E3'
+    iccid Iccid OPTIONAL,  -- ICCID
+    isdpAid [APPLICATION 15] OctetTo16 OPTIONAL,  -- AID of the ISD-P containing the Profile, tag '4F'
+    profileState [112] ProfileState OPTIONAL,  -- Tag '9F70'
+    profileNickname [16] UTF8String (SIZE(0..64)) OPTIONAL,  -- Tag '90'
+    serviceProviderName [17] UTF8String (SIZE(0..32)) OPTIONAL,  -- Tag '91'
+    profileName [18] UTF8String (SIZE(0..64)) OPTIONAL,  -- Tag '92'
+    iconType [19] IconType OPTIONAL,  -- Tag '93'
+    icon [20] OCTET STRING (SIZE(0..1024)) OPTIONAL,  -- Tag '94', see condition in ES10c:GetProfilesInfo
+    profileClass [21] ProfileClass OPTIONAL,  -- Tag '95'
+    notificationConfigurationInfo [22] SEQUENCE OF NotificationConfigurationInformation OPTIONAL,  -- Tag 'B6'
+    profileOwner [23] OperatorId OPTIONAL,  -- Tag 'B7'
+    dpProprietaryData [24] DpProprietaryData OPTIONAL,  -- Tag 'B8'
+    profilePolicyRules [25] PprIds OPTIONAL  -- Tag '99'
+}
+
+ProfileState ::= INTEGER {
+    disabled(0),
+    enabled(1)
+}
+
+IconType ::= INTEGER {
+    jpg(0),
+    png(1)
+}
+
+ProfileClass ::= INTEGER {
+    test(0),
+    provisioning(1),
+    operational(2)
+}
+
+NotificationConfigurationInformation ::= SEQUENCE {
+    profileManagementOperation NotificationEvent,
+    notificationAddress 	   UTF8String  -- FQDN to forward the notification
+}
+
+OperatorId ::= SEQUENCE {
+    mccMnc OCTET STRING (SIZE(3)),  -- MCC and MNC coded as defined in 3GPP TS 24.008 [32]
+    gid1 OCTET STRING OPTIONAL,  -- referring to content of EF GID1 (file identifier '6F3E') as defined in 3GPP TS 31.102 [54]
+    gid2 OCTET STRING OPTIONAL  -- referring to content of EF GID2 (file identifier '6F3F') as defined in 3GPP TS 31.102 [54]
+}
+
+DpProprietaryData ::= SEQUENCE {  -- Maximum size including tag and length field: 128 bytes
+    dpOid OBJECT IDENTIFIER  -- OID in the tree of the SM-DP+ that created the Profile
+    -- Additional data objects defined by the SM-DP+ MAY follow
+}
+
+PprIds ::= BIT STRING {  -- Definition of Profile Policy Rules identifiers
+    pprUpdateControl(0),  -- defines how to update PPRs via ES6
+    ppr1(1),  -- Indicator for PPR1 'Disabling of this Profile is not allowed'
+    ppr2(2)   -- Indicator for PPR2 'Deletion of this Profile is not allowed'
+}
+
+EUICCInfo2 ::= [34] SEQUENCE {  -- Tag 'BF22'
+    profileVersion   [1] VersionType,  -- Base eUICC Profile package version supported
+    svn 			 [2] VersionType,  -- GSMA SGP.22 version supported (SVN) referenced by SGP.32
+    euiccFirmwareVer [3] VersionType,  -- eUICC Firmware version
+    extCardResource  [4] OCTET STRING,  -- Extended Card Resource Information according to ETSI TS 102 226
+    uiccCapability   [5] UICCCapability,
+    ts102241Version  [6] VersionType OPTIONAL,
+    globalplatformVersion [7] VersionType OPTIONAL,
+    rspCapability         [8] RspCapability,
+    euiccCiPKIdListForVerification [9] SEQUENCE OF SubjectKeyIdentifier,  -- List of CI Public Key Identifiers supported on the eUICC for signature verification
+    euiccCiPKIdListForSigning      [10] SEQUENCE OF SubjectKeyIdentifier,  -- List of CI Public Key Identifiers supported on the eUICC for signature creation
+    euiccCategory                  [11] INTEGER { other(0), basicEuicc(1), mediumEuicc(2), contactlessEuicc(3) } OPTIONAL,
+    forbiddenProfilePolicyRules    [25] PprIds OPTIONAL,  -- Tag '99'
+    ppVersion                      VersionType,  -- Protection Profile version
+    sasAcreditationNumber          UTF8String (SIZE(0..64)),
+    certificationDataObject        [12] CertificationDataObject OPTIONAL,
+    treProperties [13] BIT STRING {
+        isDiscrete(0),
+        isIntegrated(1),
+        usesRemoteMemory(2)  -- Refers to the usage of remote memory protected by the Remote Memory Protection Function described in SGP.21 [4]
+    } OPTIONAL,
+    treProductReference                   [14] UTF8String OPTIONAL,  -- Platform_Label as defined in GlobalPlatform DLOA specification [57]
+    additionalEuiccProfilePackageVersions [15] SEQUENCE OF VersionType OPTIONAL,
+    ipaMode                               [16] IpaMode OPTIONAL,  -- Active IPA, mandatory within SGP.32
+    euiccCiPKIdListForSigningV3           [17] SEQUENCE OF SubjectKeyIdentifier OPTIONAL,  -- Not used by this version of SGP.32
+    additionalEuiccInfo                   [18] OCTET STRING (SIZE(0..32)) OPTIONAL,  -- Not used by this version of SGP.32
+    highestSvn                            [19] VersionType OPTIONAL,  -- Not used by this version of SGP.32
+    iotSpecificInfo                       [20] IoTSpecificInfo OPTIONAL  -- Mandatory within SGP.32
+}
+
+-- Definition of IoTSpecificInfo
+IoTSpecificInfo ::= SEQUENCE {
+    iotVersion [0] SEQUENCE OF VersionType,  -- SGP.32 version(s) supported by the eUICC, at least one must be present
+    ecallSupported [1] NULL OPTIONAL,  -- If present, eUICC supports the Emergency Mechanism
+    fallbackSupported [2] NULL OPTIONAL  -- If present, eUICC supports the Fallback Mechanism
+}
+
+-- Definition of IpaMode
+IpaMode ::= INTEGER {
+    ipad(0),  -- IPAd is active
+    ipae(1)   -- IPAe is active
+}
+
+-- Definition of CertificationDataObject
+CertificationDataObject ::= SEQUENCE {
+    platformLabel UTF8String,  -- Platform_Label as defined in GlobalPlatform DLOA specification [57]
+    discoveryBaseURL UTF8String  -- Discovery Base URL of the SE default DLOA Registrar as defined in GlobalPlatform DLOA specification [57]
+}
+
+
+UICCCapability ::= BIT STRING {
+    contactlessSupport(0),  -- Contactless (SWP, HCI and associated APIs)
+    usimSupport(1),        -- USIM as defined by 3GPP
+    isimSupport(2),        -- ISIM as defined by 3GPP
+    csimSupport(3),        -- CSIM as defined by 3GPP2
+
+    akaMilenage(4),        -- Milenage as AKA algorithm
+    akaCave(5),           -- CAVE as authentication algorithm
+    akaTuak128(6),        -- TUAK as AKA algorithm with 128 bit key length
+    akaTuak256(7),        -- TUAK as AKA algorithm with 256 bit key length
+    usimTestAlgorithm(8),  -- USIM test algorithm
+    rfu2(9),               -- Reserved for further algorithms
+
+    gbaAuthenUsim(10),    -- GBA authentication in the context of USIM
+    gbaAuthenISim(11),     -- GBA authentication in the context of ISIM
+    mbmsAuthenUsim(12),    -- MBMS authentication in the context of USIM
+    eapClient(13),         -- EAP client
+
+    javacard(14),          -- Java Card(TM) support
+    multos(15),            -- Multos support
+
+    multipleUsimSupport(16),  -- Multiple USIM applications are supported within the same Profile
+    multipleIsimSupport(17),   -- Multiple ISIM applications are supported within the same Profile
+    multipleCsimSupport(18),   -- Multiple CSIM applications are supported within the same Profile
+
+    berTlvFileSupport(19),  -- BER TLV files
+    dfLinkSupport(20),      -- Linked Directory Files
+    catTp(21),              -- Support of CAT TP
+    getIdentity(22),        -- Support of the GET IDENTITY command as defined in ETSI TS 102 221
+    profile-a-x25519(23),   -- Support of ECIES Profile A as defined in 3GPP TS 33.501 [87]
+    profile-b-p256(24),     -- Support of ECIES Profile B as defined in 3GPP TS 33.501 [87]
+    suciCalculatorApi(25),  -- Support of the associated API for SUCI derivation as defined in 3GPP 31.130 [31.130]
+    dns-resolution(26),      -- Support of DNS Resolution as defined by GP Amd B
+    scp11ac(27),            -- Support of GP Amd F SCP11 variants a and c
+    scp11c-authorization-mechanism(28),  -- Support of SCP11c authorization mechanism (Tag 'BF20')
+    s16mode(29),            -- Support of S16 mode as defined in GP Amd D and Amd F
+    eaka(30),               -- Support of enhanced AKA algorithm as defined in 3GPP TS [33.102]
+    iotminimal(31)         -- Support of IoT Minimal Profile as described in section 7.5
+}
+
+-- SGP32 Section 6.3.2.4
+-- ASN1START
+HandleNotificationEsipa ::= [61] CHOICE { -- Tag 'BF3D'
+    pendingNotification PendingNotification, -- A Notification to be delivered to a Notification Receiver, possibly in compact format
+    provideEimPackageResult ProvideEimPackageResult
+}
+
+RspCapability ::= BIT STRING {
+    additionalProfile(0),  -- at least one more Profile can be installed
+    crlSupport(1),  -- CRL
+    rpmSupport(2),  -- Remote Profile Management
+    testProfileSupport(3),  -- support for test profile
+    deviceInfoExtensibilitySupport(4),  -- support for ASN.1 extensibility in the Device Info
+    serviceSpecificDataSupport(5)  -- support for Service Specific Data in the Profile Metadata
+}
+
+
+IpaCapabilities ::= SEQUENCE {
+    ipaFeatures [0] BIT STRING {
+        directRspServerCommunication(0),
+        indirectRspServerCommunication(1),
+        eimDownloadDataHandling(2),
+        eimCtxParams1Generation(3),
+        eimProfileMetadataVerification(4),
+        minimizeEsipaBytes(5)
+    },
+    ipaSupportedProtocols [1] BIT STRING {
+        ipaRetrieveHttps(0),
+        ipaRetrieveCoaps(1),
+        ipaInjectHttps(2),
+        ipaInjectCoaps(3),
+        ipaProprietary(4)
+    } OPTIONAL
+}
+
+-- Definition of DeviceInfo
+
+DeviceInfo ::= SEQUENCE {
+    tac Octet4,
+    deviceCapabilities DeviceCapabilities,
+    imei Octet8 OPTIONAL
+}
+
+DeviceCapabilities ::= SEQUENCE {  -- Highest fully supported release for each definition
+    gsmSupportedRelease VersionType OPTIONAL,
+    utranSupportedRelease VersionType OPTIONAL,
+    cdma2000onexSupportedRelease VersionType OPTIONAL,
+    cdma2000hrpdSupportedRelease VersionType OPTIONAL,
+    cdma2000ehrpdSupportedRelease VersionType OPTIONAL,
+    eutranEpcSupportedRelease VersionType OPTIONAL,
+    contactlessSupportedRelease VersionType OPTIONAL,
+    rspCrlSupportedVersion VersionType OPTIONAL,
+    nrEpcSupportedRelease VersionType OPTIONAL,
+    nr5gcSupportedRelease VersionType OPTIONAL,
+    eutran5gcSupportedRelease VersionType OPTIONAL,
+    lpaSvn VersionType OPTIONAL,  -- Not defined in this version of SGP.22
+    catSupportedClasses CatSupportedClasses OPTIONAL,  -- Not defined in this version of SGP.22
+    euiccFormFactorType EuiccFormFactorType OPTIONAL,  -- Not defined in this version of SGP.22
+    deviceAdditionalFeatureSupport DeviceAdditionalFeatureSupport OPTIONAL
+}
+
+-- Definition of DeviceAdditionalFeatureSupport
+
+DeviceAdditionalFeatureSupport ::= SEQUENCE {
+    naiSupport VersionType OPTIONAL  -- Device supports Network Access Identifier
+}
+
+CatSupportedClasses ::= BIT STRING
+
+EuiccFormFactorType ::= INTEGER
+
 END
-
-
-
 
 

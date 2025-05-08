@@ -1,5 +1,5 @@
 # models.py
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, root_validator
 import base64
 from typing import Annotated
 from typing import List, Optional
@@ -54,6 +54,9 @@ class InitiateAuthenticationRequest(BaseModel):
     euiccChallenge: Base64Type = Field(..., description="Base64 encoding of the eUICC Challenge as defined in SGP.22 [4]")
     euiccInfo1: Base64Type = Field(..., description="Base64 encoding of euiccinfo1 as defined in SGP.22 [4]")
     smdpAddress: str = Field(..., description="SM-DP+ Address as defined in SGP.22 [4]")
+    eimTransactionId: TransactionIDType | None = Field(
+        None, description="eimTransactionId as defined in section 6.3.2.1 SGP32"
+    )
 
     # Validate Base64 fields
     @classmethod
@@ -64,7 +67,7 @@ class InitiateAuthenticationRequest(BaseModel):
     _validate_euiccChallenge = validate_base64_fields.__func__
     _validate_euiccInfo1 = validate_base64_fields.__func__
     
-class AuthenticateServerResponseRequest(BaseModel):
+class AuthenticateClient(BaseModel):
     transactionId: TransactionIDType = Field(
         ..., description="TransactionID as defined in SGP.22 [4]"
     )
@@ -103,6 +106,22 @@ class GetBoundProfilePackage(BaseModel):
 
     # Apply Base64 validation
     _validate_prepareDownloadResponse = validate_base64.__func__
+
+class HandleNotification(BaseModel):
+    pendingNotification: Base64Type | None = Field(
+        None, description="PendingNotification as defined in section 5.14.7 SGP32"
+    )
+    provideEimPackageResult: Base64Type | None = Field(
+        None, description="ProvideEimPackageResult as defined in section 6.3.2.7 SGP32"
+    )
+
+    @root_validator(pre=True)
+    def check_only_one_field(cls, values):
+        pendingNotification = values.get("pendingNotification")
+        provideEimPackageResult = values.get("provideEimPackageResult")
+        if ((pendingNotification is None) == (provideEimPackageResult is None)) and ((pendingNotification is Base64Type) == (provideEimPackageResult is Base64Type)) :
+            raise ValueError("Exactly one of 'pendingNotification' or 'provideEimPackageResult' must be set")
+        return values
 
 
 
